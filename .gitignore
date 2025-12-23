@@ -1,0 +1,14 @@
+Ambientes Virtuais
+
+venv/
+pycache/
+*.py[cod]
+
+Variáveis de Ambiente e Segredos (CRÍTICO)
+
+.env
+
+Logs e arquivos do sistema
+
+*.log
+.DS_Store
