@@ -1,0 +1,7 @@
+google-generativeai
+python-dotenv
+openai-whisper
+sounddevice
+numpy
+scipy
+soundfile
