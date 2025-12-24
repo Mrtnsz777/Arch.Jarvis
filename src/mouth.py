@@ -9,8 +9,8 @@ logging.basicConfig(level=logging.ERROR)
 class Mouth:
     def __init__(self):
         """
-        Sistema de síntese de voz (TTS) focado em estabilidade e baixa latência.
-        Utiliza o Piper TTS para gerar voz localmente sem sobrecarregar a GPU.
+        Sistema de síntese de voz (TTS) de baixa latência.
+        Otimizado para respostas rápidas e diretas no Arch Linux.
         """
         # Procura o binário do Piper (Arch Linux AUR: piper-tts-bin)
         self.piper_binary = (
@@ -32,36 +32,38 @@ class Mouth:
 
     def speak(self, text):
         """
-        Recebe um texto e converte-o em fala imediatamente.
+        Converte texto em fala com velocidade otimizada para o Módulo 3.
         """
         if not text or not text.strip():
             return
 
-        # Limpeza simples para evitar que o sintetizador tente ler caracteres especiais
+        # Limpeza agressiva de caracteres que causam pausas ou erros na síntese
         text = text.replace("*", "").replace("#", "").replace("_", "").strip()
         
-        print(f"[Boca] A falar: '{text}'")
+        # Log simplificado para o terminal
+        print(f"[Boca] Output: '{text}'")
 
         if not self.piper_binary or not os.path.exists(self.piper_model):
-            print("[Boca] ❌ Erro: O sistema de voz não está configurado corretamente.")
+            print("[Boca] ❌ Erro: Componentes de voz ausentes.")
             return
 
-        # Comando otimizado para reprodução imediata via PipeWire/PulseAudio
-        # --length_scale 1.05: Torna a fala ligeiramente mais natural (menos apressada)
+        # --- AJUSTES DO MÓDULO 3 ---
+        # --length_scale 0.9: Aumenta a velocidade da fala (10% mais rápido que o padrão)
+        # Isso reduz o tempo total de resposta e soa mais eficiente.
         cmd = [
             "sh", "-c",
-            f'echo "{text}" | {self.piper_binary} --model "{self.piper_model}" --length_scale 1.05 --output_raw | paplay --raw --rate=22050 --channels=1 --format=s16le'
+            f'echo "{text}" | {self.piper_binary} --model "{self.piper_model}" --length_scale 0.9 --output_raw | paplay --raw --rate=22050 --channels=1 --format=s16le'
         ]
 
         try:
-            # Executa a síntese e reprodução
+            # Executa a síntese e reprodução via PipeWire/PulseAudio
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError as e:
             print(f"[Boca] Erro na síntese/reprodução: {e}")
         except Exception as e:
-            print(f"[Boca] Erro inesperado no módulo de voz: {e}")
+            print(f"[Boca] Erro inesperado: {e}")
 
 if __name__ == "__main__":
-    # Teste rápido do módulo de voz
+    # Teste de performance do Módulo 3
     mouth = Mouth()
-    mouth.speak("A voz do Jarvis foi restaurada com sucesso.")
+    mouth.speak("Sistemas otimizados. Velocidade de resposta aumentada.")

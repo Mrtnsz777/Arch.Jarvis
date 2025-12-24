@@ -2,6 +2,7 @@ import sys
 import os
 import time
 import warnings
+from datetime import datetime # Importação necessária para o tempo
 
 # --- CONFIGURAÇÕES DE SILENCIAMENTO (Evita poluição no terminal) ---
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Silencia avisos do Tensorflow/Whisper
@@ -17,6 +18,23 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.brain import ask_gemini, configurar_gemini
 from src.ears import Ears
 from src.mouth import Mouth
+
+# --- SYSTEM PROMPT (O Cérebro do Jarvis - Módulo 3) ---
+# Otimizado para TTS: Respostas frias, sem enrolação e com pontuação mínima para evitar pausas.
+SYSTEM_PROMPT = (
+    "Sua identidade é Jarvis assistente técnico integrado ao Arch Linux com Hyprland. "
+    "Sua personalidade é fria direta e eficiente. "
+    "REGRAS OBRIGATÓRIAS: "
+    "1. JAMAIS use saudações como Olá ou Como posso ajudar. Vá direto ao ponto. "
+    "2. JAMAIS use emojis ou formatação Markdown como negritos ou listas. Texto puro apenas. "
+    "3. Use pontuação mínima. Evite vírgulas desnecessárias para não causar pausas no áudio. "
+    "4. Navegador: Use exclusivamente o Brave. Ignore Firefox ou Chrome. "
+    "5. Atalhos do Hyprland: "
+    "- Brave: SUPER B | VS Code: SUPER Z | Spotify: SUPER S | "
+    "- OBS: SUPER O | Discord: SUPER D | Floating: SUPER + V | Terminal: SUPER Q. "
+    "6. Se pedirem para abrir um app cite o atalho de forma curta. "
+    "7. Fale como um sistema operacional de alto desempenho. Sem papo furado."
+)
 
 def selecionar_modo_cerebro():
     """
@@ -37,7 +55,7 @@ def selecionar_modo_cerebro():
         return "auto"
 
 def main():
-    print("--- INICIALIZANDO ARCH JARVIS v0.3 (Stable Mode) ---")
+    print("--- ARCH JARVIS v0.3 | Módulo 3: Refinamento de Personalidade + Time Aware ---")
     
     # 1. Configurar o Cérebro (Gemini)
     if not configurar_gemini():
@@ -50,15 +68,16 @@ def main():
 
     # 2. Configurar os Sentidos (Ouvidos e Boca)
     try:
-        # Inicializa o Whisper Medium (Versão direta sem filtros)
-        print("A carregar ouvidos (Whisper Medium)...")
+        # Inicializa o Whisper (Faster-Whisper via CPU conforme estabilizado anteriormente)
+        print("A carregar ouvidos (Faster-Whisper)...")
         ears = Ears(model_size="medium") 
         
         # Inicializa o Piper TTS
         print("A carregar boca (Piper)...")
         mouth = Mouth()
         
-        mouth.speak(f"Sistemas online no modo {modo_cerebro}. Aguardando comando.")
+        # Inicialização rápida
+        mouth.speak("Sistemas online") 
         
     except Exception as e:
         print(f"Erro crítico ao carregar os sentidos: {e}")
@@ -69,7 +88,7 @@ def main():
 
     while True:
         try:
-            # Fluxo de Interação: O utilizador controla quando começar a gravar
+            # Fluxo de Interação: O utilizador controla quando começar a gravar (Trigger on Demand)
             input("\n🎤 Pressiona ENTER para INICIAR a gravação...")
             
             # Ouve e transcreve diretamente
@@ -81,22 +100,24 @@ def main():
 
             # Comandos de saída rápida por voz
             if user_text.lower().strip() in ["sair", "desligar", "encerrar", "tchau"]:
-                mouth.speak("A encerrar sistemas. Até logo.")
+                mouth.speak("Encerrando")
                 break
 
             # Processamento de IA
             print(f"🧠 A processar ({modo_cerebro})...")
             
-            # Instruções de sistema para garantir que a IA responda apenas com texto falável
-            instrucoes_sistema = (
-                "\n\n[INSTRUÇÃO DE SISTEMA]: "
-                "Atue como o assistente Jarvis. "
-                "1. NÃO USE EMOJIS (o sintetizador de voz não os lê corretamente). "
-                "2. Não use formatação Markdown (como negritos ou asteriscos). "
-                "3. Seja direto, conciso e use linguagem natural para fala."
-            )
+            # --- INJEÇÃO DE CONTEXTO TEMPORAL ---
+            # Pega a hora atual do sistema e formata (Ex: "14:30")
+            hora_atual = datetime.now().strftime("%H:%M")
+            data_atual = datetime.now().strftime("%d/%m/%Y")
             
-            prompt_final = user_text + instrucoes_sistema
+            # Adiciona ao prompt como uma informação de sistema invisível
+            contexto_tempo = f"\n[DADOS DO SISTEMA]: Hora atual: {hora_atual}. Data: {data_atual}."
+            
+            # Combinação do Prompt de Sistema + Tempo + entrada do usuário
+            prompt_final = f"{SYSTEM_PROMPT}\n{contexto_tempo}\n\nUsuário: {user_text}"
+            
+            # Chama o Gemini com o modo selecionado no menu inicial
             ai_response = ask_gemini(prompt_final, mode=modo_cerebro)
             
             print(f"🤖 Jarvis: {ai_response}")
