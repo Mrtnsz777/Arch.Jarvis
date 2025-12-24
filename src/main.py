@@ -3,13 +3,12 @@ import os
 import time
 import warnings
 
-# --- CONFIGURAÇÕES DE SILENCIAMENTO (Anti-Spam no Terminal) ---
-# Define variáveis de ambiente para calar logs do Tensorflow, GRPC e ALSA
+# --- CONFIGURAÇÕES DE SILENCIAMENTO (Evita poluição no terminal) ---
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Silencia avisos do Tensorflow/Whisper
 os.environ['GRPC_VERBOSITY'] = 'ERROR'     # Silencia logs de conexão do Google
 os.environ['GLOG_minloglevel'] = '2'       # Silencia logs internos C++
 
-# Ignora avisos de depreciação do Python
+# Ignora avisos de depreciação para manter a interface limpa
 warnings.filterwarnings("ignore")
 
 # Adiciona o diretório atual ao path para garantir que as importações funcionem
@@ -20,7 +19,9 @@ from src.ears import Ears
 from src.mouth import Mouth
 
 def selecionar_modo_cerebro():
-    """Menu para escolher o modo de operação do cérebro."""
+    """
+    Menu para escolher o modo de operação da Inteligência Artificial.
+    """
     print("\n--- SELEÇÃO DE MODELO ---")
     print("1. Auto (Tenta Pro, fallback para Flash) [Recomendado]")
     print("2. Pro (Apenas Gemini 2.5 Pro - Mais inteligente)")
@@ -36,79 +37,78 @@ def selecionar_modo_cerebro():
         return "auto"
 
 def main():
-    print("--- INICIALIZANDO ARCH JARVIS v0.3 (Silent Mode) ---")
+    print("--- INICIALIZANDO ARCH JARVIS v0.3 (Stable Mode) ---")
     
-    # 1. Configurar Cérebro
+    # 1. Configurar o Cérebro (Gemini)
     if not configurar_gemini():
-        print("Erro crítico: Chaves de API não configuradas.")
+        print("Erro crítico: Chaves de API não configuradas no ficheiro .env.")
         return
     
-    # Pergunta qual cérebro usar nesta sessão
+    # Seleção do modelo para esta sessão
     modo_cerebro = selecionar_modo_cerebro()
     print(f"Modo selecionado: {modo_cerebro.upper()}")
 
-    # 2. Configurar Sentidos
+    # 2. Configurar os Sentidos (Ouvidos e Boca)
     try:
-        print("Carregando ouvidos (Whisper)...")
-        ears = Ears(model_size="base") 
+        # Inicializa o Whisper Medium (Versão direta sem filtros)
+        print("A carregar ouvidos (Whisper Medium)...")
+        ears = Ears(model_size="medium") 
         
-        print("Carregando boca (Piper)...")
+        # Inicializa o Piper TTS
+        print("A carregar boca (Piper)...")
         mouth = Mouth()
         
         mouth.speak(f"Sistemas online no modo {modo_cerebro}. Aguardando comando.")
         
     except Exception as e:
-        print(f"Erro crítico nos sentidos: {e}")
+        print(f"Erro crítico ao carregar os sentidos: {e}")
         return
 
     print("\n>>> JARVIS PRONTO <<<")
-    print("(Pressione Ctrl+C para encerrar)")
+    print("(Pressiona Ctrl+C para encerrar)")
 
     while True:
         try:
-            # Novo fluxo: Controle total da gravação
-            input("\n🎤 Pressione ENTER para INICIAR a gravação...")
+            # Fluxo de Interação: O utilizador controla quando começar a gravar
+            input("\n🎤 Pressiona ENTER para INICIAR a gravação...")
             
-            # Chama a função de gravação toggle (Grava até apertar Enter de novo)
+            # Ouve e transcreve diretamente
             user_text = ears.listen_toggle()
             
             if not user_text or user_text.strip() == "":
-                print("⚠️ Silêncio detectado ou áudio vazio.")
+                print("⚠️ Silêncio detectado ou comando não compreendido.")
                 continue
 
-            # Comandos de saída rápida
+            # Comandos de saída rápida por voz
             if user_text.lower().strip() in ["sair", "desligar", "encerrar", "tchau"]:
                 mouth.speak("A encerrar sistemas. Até logo.")
                 break
 
-            # Pensar (passando o modo escolhido)
-            print(f"🧠 Processando ({modo_cerebro})...")
+            # Processamento de IA
+            print(f"🧠 A processar ({modo_cerebro})...")
             
-            # --- INJEÇÃO DE REGRAS DE SISTEMA ---
-            # Adicionamos instruções invisíveis para formatar a resposta da IA
+            # Instruções de sistema para garantir que a IA responda apenas com texto falável
             instrucoes_sistema = (
-                "\n\n[INSTRUÇÃO DE SISTEMA - IMPORTANTE]: "
-                "Você é um assistente de voz. "
-                "1. NÃO USE EMOJIS. JAMAIS. (O sintetizador lê a descrição deles e fica horrível). "
-                "2. NÃO use formatação Markdown (*negrito*, #títulos), apenas texto puro. "
-                "3. Seja direto e conciso, ideal para fala."
+                "\n\n[INSTRUÇÃO DE SISTEMA]: "
+                "Atue como o assistente Jarvis. "
+                "1. NÃO USE EMOJIS (o sintetizador de voz não os lê corretamente). "
+                "2. Não use formatação Markdown (como negritos ou asteriscos). "
+                "3. Seja direto, conciso e use linguagem natural para fala."
             )
             
             prompt_final = user_text + instrucoes_sistema
-            
             ai_response = ask_gemini(prompt_final, mode=modo_cerebro)
             
             print(f"🤖 Jarvis: {ai_response}")
 
-            # Falar
+            # Reprodução da resposta por voz
             mouth.speak(ai_response)
 
         except KeyboardInterrupt:
-            print("\nEncerrando forçadamente...")
+            print("\nEncerrando sessão...")
             break
         except Exception as e:
             print(f"Erro no loop principal: {e}")
-            # mouth.speak("Ocorreu um erro interno.") # Opcional
 
 if __name__ == "__main__":
     main()
