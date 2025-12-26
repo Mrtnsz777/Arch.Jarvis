@@ -53,6 +53,7 @@ class Mouth:
             "Tela bloqueada": "SysBlock",
             "Desligando": "PowerOff",
             "Reiniciando": "Reboot",
+            "Beep": "Beep", # Adicionado mapeamento explicito para Beep
             
             # --- Fallback para 'Exec' (Genéricos) ---
             # Tudo o que não tem áudio específico mas é uma ação curta usa o 'Exec'
@@ -62,15 +63,19 @@ class Mouth:
             "Digitado": "Exec"    # Ex: "Digitado"
         }
 
-    def play_fixed(self, sound_name):
+    def play_fixed(self, sound_name, wait=True):
         """
         Toca um arquivo de áudio pré-gravado via pipeline ffmpeg -> paplay.
+        Args:
+            sound_name (str): Nome do arquivo (sem extensão).
+            wait (bool): Se True, espera o áudio terminar antes de liberar o código.
+                         Se False (fire-and-forget), toca em background. Ideal para Bips.
         """
         # Procura por .mp3 (comum no ElevenLabs) e .wav
         for ext in [".mp3", ".wav"]:
             file_path = os.path.join(self.sounds_dir, sound_name + ext)
             if os.path.exists(file_path):
-                print(f"[Boca] 🔊 Áudio Premium: {sound_name}")
+                # print(f"[Boca] 🔊 Áudio Premium: {sound_name}")
                 try:
                     if self.ffmpeg_binary:
                         # Pipeline com volume boost (150%)
@@ -79,9 +84,15 @@ class Mouth:
                             f'-f s16le -ar 44100 -ac 2 - | '
                             f'paplay --raw --rate=44100 --channels=2 --format=s16le --client-name="JarvisFixed"'
                         )
-                        subprocess.run(cmd_str, shell=True, check=True)
+                        if wait:
+                            subprocess.run(cmd_str, shell=True, check=True)
+                        else:
+                            subprocess.Popen(cmd_str, shell=True) # Não bloqueia
                     else:
-                        subprocess.run(["paplay", file_path], check=True)
+                        if wait:
+                            subprocess.run(["paplay", file_path], check=True)
+                        else:
+                            subprocess.Popen(["paplay", file_path])
                     return True
                 except Exception as e:
                     print(f"[Boca] Erro ao tocar {sound_name}: {e}")
@@ -98,14 +109,16 @@ class Mouth:
         # 1. Tenta interceptação manual (AUDIO:Nome)
         if text.startswith("AUDIO:"):
             sound_name = text.split(":")[1].strip()
-            if self.play_fixed(sound_name): return
+            # Bips e sons curtos não devem bloquear a execução
+            is_beep = sound_name.lower() in ["beep", "exec"]
+            if self.play_fixed(sound_name, wait=not is_beep): return
 
         # 2. Tenta interceptação inteligente por conteúdo
-        # Se a frase do sistema for conhecida, toca o áudio top de linha
         for key, sound_file in self.smart_audio_map.items():
             if key.lower() in text.lower():
+                # Sons de sistema podem bloquear, exceto se for feedback muito rápido
                 if self.play_fixed(sound_file):
-                    return # Se tocou o áudio, não usa o Piper
+                    return 
 
         # 3. Fallback: Piper TTS (Para horário, notícias, conversas)
         text_clean = text.replace("*", "").replace("#", "").replace("_", "").strip()
@@ -113,7 +126,7 @@ class Mouth:
 
         if not self.piper_binary or not os.path.exists(self.piper_model):
             # Se não tiver Piper, tenta pelo menos um som de confirmação genérico
-            self.play_fixed("Exec")
+            self.play_fixed("Exec", wait=False)
             return
 
         # Pipeline de Áudio Dinâmico

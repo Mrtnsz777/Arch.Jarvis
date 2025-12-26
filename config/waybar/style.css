@@ -1,0 +1,79 @@
+/* --- TEMA SITH (Desktop) --- */
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrainsMono Nerd Font";
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: rgba(0, 0, 0, 0.85); /* Preto Transparente */
+    color: #ffffff;
+}
+
+/* --- WORKSPACES --- */
+#workspaces button {
+    padding: 0 10px;
+    background: transparent;
+    color: #ffffff;
+    border-bottom: 2px solid transparent;
+}
+
+#workspaces button.active {
+    color: #ff0000; /* Vermelho */
+    border-bottom: 2px solid #ff0000;
+}
+
+#workspaces button:hover {
+    background: rgba(255, 0, 0, 0.2);
+    border-bottom: 2px solid #ffffff;
+}
+
+/* --- RELÓGIO --- */
+#clock {
+    padding: 0 10px;
+    color: #ff0000; /* Hora Vermelha */
+    font-weight: bold;
+}
+
+/* --- MÓDULOS --- */
+#pulseaudio, #cpu, #memory, #tray {
+    padding: 0 10px;
+    color: #ffffff;
+}
+
+/* Alerts em Vermelho */
+#pulseaudio.muted {
+    color: #777777;
+}
+
+/* --- MÓDULO JARVIS --- */
+#custom-jarvis {
+    padding: 0 15px;
+    font-weight: bold;
+    color: #555555; /* Cinza (Offline/Idle) */
+}
+
+/* Quando estiver ouvindo (Listening) */
+#custom-jarvis.listening {
+    color: #ff0000; /* Vermelho Sith */
+    animation: blink 1s infinite;
+}
+
+/* Quando estiver processando (Thinking) */
+#custom-jarvis.processing {
+    color: #ffcc00; /* Amarelo/Laranja */
+}
+
+/* Quando ocorrer um erro */
+#custom-jarvis.error {
+    color: #ff00ff; /* Magenta para erro */
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
