@@ -221,14 +221,16 @@ python src/core.py
 Adicione estas linhas ao seu `~/.config/hypr/hyprland.conf`:
 
 ```bash
-# Iniciar Arch Jarvis na inicialização
-exec-once = cd ~/SAAS/Arch.Jarvis && source venv/bin/activate && python src/core.py &
+Iniciar Arch Jarvis na inicialização
+exec-once = /home/SEU_USER/Arch.Jarvis/arch_jarvis/scripts/start_jarvis.sh
 
-# Hotkey para ativar Jarvis (Alt + J)
-bind = ALT, J, exec, python ~/SAAS/Arch.Jarvis/src/core.py
+Hotkey para ativar Jarvis ($mainMod + J)
+bind = $mainMod, J, exec, /home/SEU_USER/Arch.Jarvis/arch_jarvis/scripts/control_jarvis.sh
 
-# Hotkey para parar Jarvis (Alt + Shift + J)
-bind = ALT SHIFT, J, exec, pkill -f "python.*core.py"
+Hotkey para parar Jarvis ($mainMod + J)
+bind = $mainMod, J, exec, /home/SEU_USER/Arch.Jarvis/arch_jarvis/scripts/control_jarvis.sh
+
+($mainMod + J) = WIN + J // SUPER + J
 ```
 
 ---
